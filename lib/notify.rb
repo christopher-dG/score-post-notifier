@@ -1,37 +1,37 @@
 require 'redd'
 require 'discordrb'
+require 'yaml'
 
-DIR = File.expand_path("#{File.expand_path(__FILE__)}/../..")
-POSTS_FILE = "#{DIR}/posts"
-SECRETS_DIR = "#{DIR}/secrets"
-D_TOKEN = File.open("#{SECRETS_DIR}/d_token") {|f| f.read.chomp}
-D_CLIENT_ID = File.open("#{SECRETS_DIR}/d_client_id") {|f| f.read.chomp}
-CHANNEL_ID = File.open("#{SECRETS_DIR}/d_channel_id") {|f| f.read.chomp}
-R_PASSWORD = File.open("#{SECRETS_DIR}/r_pass").read.chomp
-R_SECRET = File.open("#{SECRETS_DIR}/r_secret").read.chomp
-R_CLIENT_ID=File.open("#{SECRETS_DIR}/r_client_id").read.chomp
-
-discord = Discordrb::Bot.new token: D_TOKEN, client_id: D_CLIENT_ID
-discord.run(:async)
+post_ids = File.join(Dir.home, 'score-post-notifier', 'posts')
+config = YAML.load_file(File.join(Dir.home, 'score-post-notifier', 'config.yml'))
 
 begin
-  posts = Marshal.load(File.open(POSTS_FILE).read)
+  ids = Marshal.load(File.open(post_ids).read)
 rescue
-  posts = []
+  ids = []
 end
+
+discord = Discordrb::Bot.new(
+  token: config['discord_token'],
+  client_id: config['discord_client_id']
+)
+discord.run(:async)
 
 Redd.it(
   user_agent: 'Redd:osu!-bot:v0.0.0',
-  client_id: R_CLIENT_ID,
-  secret: R_SECRET,
+  client_id: config['reddit_client_id'],
+  secret: config['reddit_secret'],
   username: 'osu-bot',
-  password: R_PASSWORD,
+  password: config['reddit_password'],
 ).subreddit('osugame').new.each do |post|
-  if post.title.strip =~ /.+\|.+-.+\[.+\].*/ && !post.is_self &&
-     !posts.include?(post.permalink)
-    posts.push(post.permalink)
-    discord.send_message(CHANNEL_ID, "@here New score post: https://reddit.com#{post.permalink}")
+  if post.title.strip =~ /.+\|.+-.+\[.+\].*/ && !post.is_self && !ids.include?(post.id)
+    ids.push(post.id)
+    discord.send_message(
+      config['discord_channel_id'],
+      "@here New score post: https://redd.it/#{post.id}"
+    )
+    puts("Sent a message for post: redd.it/#{post.id}")
   end
 end
 
-File.open(POSTS_FILE, 'w') {|f| f.write(Marshal.dump(posts))}
+File.open(post_ids, 'w') {|f| f.write(Marshal.dump(ids))}
