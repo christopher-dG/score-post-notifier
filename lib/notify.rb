@@ -28,7 +28,7 @@ Redd.it(
     ids.push(post.id)
     discord.send_message(
       config['discord_channel_id'],
-      "@here New score post: #{post.title}\nhttps://redd.it/#{post.id}"
+      "@here: #{post.title}\nhttps://redd.it/#{post.id}"
     )
     puts("Sent a message for post: redd.it/#{post.id}")
   end
