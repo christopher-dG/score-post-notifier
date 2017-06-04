@@ -5,10 +5,10 @@ require 'yaml'
 post_ids = File.join(Dir.home, 'score-post-notifier', 'posts')
 config = YAML.load_file(File.join(Dir.home, 'score-post-notifier', 'config.yml'))
 
+ids = []
 begin
-  ids = Marshal.load(File.open(post_ids).read)
+  File.open(post_ids) {|f| ids = Marshal.load(f.read)}
 rescue
-  ids = []
 end
 
 discord = Discordrb::Bot.new(
