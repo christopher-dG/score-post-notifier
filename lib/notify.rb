@@ -2,6 +2,8 @@ require 'redd'
 require 'discordrb'
 require 'yaml'
 
+SP_REGEX = /.+\|.+-.+\[.+\]/  # This is what a score post looks like.
+
 post_ids = File.join(Dir.home, 'score-post-notifier', 'posts')
 config = YAML.load_file(File.join(Dir.home, 'score-post-notifier', 'config.yml'))
 
@@ -24,7 +26,7 @@ Redd.it(
   username: 'osu-bot',
   password: config['reddit_password'],
 ).subreddit('osugame').new.each do |post|
-  if post.title.strip =~ /.+\|.+-.+\[.+\].*/ && !post.is_self && !ids.include?(post.id)
+  if post.title.strip =~ SP_REGEX && !post.is_self && !ids.include?(post.id)
     ids.push(post.id)
     discord.send_message(
       config['discord_channel_id'],
