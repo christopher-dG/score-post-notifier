@@ -14,13 +14,13 @@ rescue
 end
 
 discord = Discordrb::Bot.new(
-  token: config['discord_token'],
   client_id: config['discord_client_id']
+  token: config['discord_token'],
 )
 discord.run(:async)
 
 Redd.it(
-  user_agent: 'Redd:osu!-bot:v0.0.0',
+  user_agent: 'osu!-bot',
   client_id: config['reddit_client_id'],
   secret: config['reddit_secret'],
   username: 'osu-bot',
@@ -28,10 +28,12 @@ Redd.it(
 ).subreddit('osugame').new.each do |post|
   if post.title.strip =~ SP_REGEX && !post.is_self && !ids.include?(post.id)
     ids.push(post.id)
-    discord.send_message(
-      config['discord_channel_id'],
-      "@here: #{post.title}\nhttps://redd.it/#{post.id}"
-    )
+    config['discord_channel_ids'].each do |channel_id|
+      discord.send_message(
+        channel_id,
+        "@here: #{post.title}\nhttps://redd.it/#{post.id}"
+      )
+    end
     puts("Sent a message for post: redd.it/#{post.id}")
   end
 end
