@@ -14,7 +14,7 @@ rescue
 end
 
 discord = Discordrb::Bot.new(
-  client_id: config['discord_client_id']
+  client_id: config['discord_client_id'],
   token: config['discord_token'],
 )
 discord.run(:async)
