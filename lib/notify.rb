@@ -6,8 +6,8 @@ SP_REGEX = /.+\|.+-.+\[.+\]/  # This is what a score post looks like.
 UP = "\u{1F44D}"
 DOWN = "\u{1F44E}"
 
-post_ids = File.join(Dir.home, 'score-post-notifier', 'posts')
-config = YAML.load_file(File.join(Dir.home, 'score-post-notifier', 'config.yml'))
+post_ids = "#{ENV['APP']}/posts"
+config = YAML.load_file("#{ENV['APP']}/config.yml")
 
 ids = []
 begin
