@@ -28,7 +28,8 @@ Redd.it(
   username: 'osu-bot',
   password: config['reddit_password'],
 ).subreddit('osugame').new.each do |post|
-  if post.title.strip =~ SP_REGEX && !post.is_self && !ids.include?(post.id)
+  if post.title.strip =~ SP_REGEX && !post.is_self && !config["blacklist"].include?(post.author.name) && !ids.include?(post.id)
+        
     ids.push(post.id)
     config['discord_channel_ids_to_roles'].each do |channel, role|
       msg = discord.send_message(
