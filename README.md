@@ -13,5 +13,7 @@ uploaders.
 
 ***
 
-If you're interested in its services, feel free to contact me on Reddit
-(`/u/PM_ME_DOG_PICS_PLS`) or Discord (`Chris | Slow Twitch#7120`).
+If you're interested in its services, feel free to contact me.
+
+* Reddit: `/u/PM_ME_DOG_PICS_PLS`
+* Discord: `Chris | Slow Twitch#7120`
