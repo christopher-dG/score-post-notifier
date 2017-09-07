@@ -37,7 +37,7 @@ subreddit.new.each do |post|
       submitter_blacklisted = channel['submitter_blacklist'].include?(post.author.name)
       player_blacklisted = channel['player_blacklist'].include?(player_name)
       if !submitter_blacklisted && !player_blacklisted
-        text = "#{channel['tag']}: #{post.title}\nhttps://reddi.it/#{post.id}"
+        text = "#{channel['tag']}: #{post.title}\nhttps://redd.it/#{post.id}"
         puts("Sending to #{channel['id']}:\n#{text}")
         msg = discord.send_message(channel['id'], text)
         msg.react(UP)
