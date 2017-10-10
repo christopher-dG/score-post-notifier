@@ -15,6 +15,8 @@ rescue
   []
 end
 
+puts(Time.now)
+
 discord = Discordrb::Bot.new(
   client_id: config['discord_client_id'],
   token: config['discord_token'],
