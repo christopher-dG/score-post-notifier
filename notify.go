@@ -17,13 +17,16 @@ import (
 var (
 	config         Config                                     // Config options.
 	discord        *discordgo.Session                         // Discord session.
-	noTag          = containsIgnoreCase(os.Args, "--no-tag")  // Don't tag anyone in messages.
 	listingOptions = geddit.ListingOptions{}                  // Redit listing options.
+	noTag          = containsIgnoreCase(os.Args, "--no-tag")  // Don't tag anyone in messages.
 	reddit         *geddit.OAuthSession                       // Reddit session.
 	testRun        = containsIgnoreCase(os.Args, "--test")    // Don't send any messages.
 	titleRE        = regexp.MustCompile(".+\\|.+-.+\\[.+\\]") // Title regex.
-	thumbsUp       = "1F44D"                                  // Thumbs up emoji.
-	thumbsDown     = "1F44E"                                  // Thumbs down emoji.
+)
+
+const (
+	thumbsDown = "👎" // Thumbs down emoji.
+	thumbsUp   = "👍" // Thumbs up emoji.
 )
 
 // Credentials represents the credentials needed to access Reddit and Discord.
@@ -134,11 +137,10 @@ func getPlayerName(title string) string {
 
 // addReactions adds thumbs up/down reactions to a message.
 func addReactions(msg *discordgo.Message) error {
-	// if err := discord.MessageReactionAdd(msg.ChannelID, msg.ID, thumbsUp); err != nil {
-	// 	return err
-	// }
-	// return discord.MessageReactionAdd(msg.ChannelID, msg.ID, thumbsDown)
-	return nil // I don't know what the emoji IDs are supposed to be.
+	if err := discord.MessageReactionAdd(msg.ChannelID, msg.ID, thumbsUp); err != nil {
+		return err
+	}
+	return discord.MessageReactionAdd(msg.ChannelID, msg.ID, thumbsDown)
 }
 
 // processPosts goes through new posts and announces them if necessary.
