@@ -43,7 +43,7 @@ type Channel struct {
 	BLPlayers []string `json:"bl_players"` // Players to ignore.
 }
 
-// Config represents all required credentials and configuration.
+// Config represents all required credentials and configuration options.
 type Config struct {
 	Channels    []Channel   `json:"channels"`    // Channel configurations.
 	Credentials Credentials `json:"credentials"` // Reddit/Discord credentials.
@@ -88,7 +88,7 @@ func loginDiscord() (err error) {
 	return
 }
 
-// setInitialBefore sets listingOptions.Before to not process too many existing posts.
+// setInitialBefore sets listingOptions.Before to avoid processing too many existing posts.
 func setInitialBefore() error {
 	posts, err := reddit.SubredditSubmissions(
 		config.Subreddit,
@@ -193,10 +193,10 @@ func processPosts(posts []*geddit.Submission) {
 }
 
 func main() {
-	log.Printf("Running with --test=%t, --no-tag=%t", testRun, noTag)
+	log.Printf("running with --test=%t, --no-tag=%t", testRun, noTag)
 
 	if err := loadConfig(); err != nil {
-		log.Fatalf("could load config: %s", err)
+		log.Fatalf("couldn't load config: %s", err)
 	}
 	if err := loginReddit(); err != nil {
 		log.Fatalf("couldn't log into Reddit: %s", err)
@@ -209,26 +209,16 @@ func main() {
 		log.Printf("couldn't set initial before value: %s", err)
 	}
 
-	// Both Reddit and Discord's auth tokens will expire eventually,
-	// so we'll just quit and reboot every now and then.
-	go func() {
-		time.Sleep(59 * time.Minute)
-		log.Println("exiting on time")
-		os.Exit(0)
-	}()
-
 	for {
-		posts, err := reddit.SubredditSubmissions(
+		if posts, err := reddit.SubredditSubmissions(
 			config.Subreddit,
 			geddit.NewSubmissions,
 			listingOptions,
-		)
-		if err != nil {
+		); err != nil {
 			log.Printf("couldn't get new posts: %s", err)
-			time.Sleep(5 * time.Minute)
 		} else {
 			processPosts(posts)
-			time.Sleep(time.Minute)
 		}
+		time.Sleep(time.Minute)
 	}
 }
