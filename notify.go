@@ -93,6 +93,10 @@ func loginDiscord() (err error) {
 
 // setInitialBefore sets listingOptions.Before to avoid processing too many existing posts.
 func setInitialBefore() error {
+	if testRun {
+		return nil // We want to look at all posts for test runs.
+	}
+
 	posts, err := reddit.SubredditSubmissions(
 		config.Subreddit,
 		geddit.NewSubmissions,
@@ -102,7 +106,7 @@ func setInitialBefore() error {
 		return err
 	}
 	// Leave a few posts of overlap just in case we missed anything while not running.
-	listingOptions.Before = posts[4].FullID
+	listingOptions.Before = posts[2].FullID
 	return nil
 }
 
@@ -122,7 +126,7 @@ func containsIgnoreCase(a []string, k string) bool {
 func shouldNotify(post *geddit.Submission) (bool, string) {
 	if post.IsSelf {
 		return false, "is a self post"
-	} else if post.IsSaved {
+	} else if !testRun && post.IsSaved {
 		return false, "is already saved"
 	} else if !titleRE.Match([]byte(post.Title)) {
 		return false, "is not a score post"
@@ -146,8 +150,6 @@ func addReactions(msg *discordgo.Message) error {
 // processPosts goes through new posts and announces them if necessary.
 func processPosts(posts []*geddit.Submission) {
 	for _, post := range posts {
-		listingOptions.Before = post.FullID
-
 		should, reason := shouldNotify(post)
 		if !should {
 			log.Printf("skipping %s: %s", post.Title, reason)
@@ -166,11 +168,10 @@ func processPosts(posts []*geddit.Submission) {
 			}
 
 			url := fmt.Sprintf("https://redd.it/%s", post.ID)
-			var text string
-			if noTag {
-				text = fmt.Sprintf("%s\n%s", post.Title, url)
-			} else {
-				text = fmt.Sprintf("%s: %s\n%s", channel.Tag, post.Title, url)
+			text := fmt.Sprintf("%s\n%s (post by `/u/%s`)", post.Title, url, post.Author)
+
+			if !noTag {
+				text = fmt.Sprintf("%s: %s", channel.Tag, text)
 			}
 
 			log.Printf("sending: %s", strings.Replace(text, "\n", " \\n ", -1))
@@ -192,22 +193,23 @@ func processPosts(posts []*geddit.Submission) {
 		}
 	}
 
+	if len(posts) > 0 {
+		// In the future, skip all posts older than the current most recent.
+		listingOptions.Before = posts[0].FullID
+	}
 }
 
 func main() {
 	log.Printf("running with --test=%t, --no-tag=%t", testRun, noTag)
 
-	if err := loadConfig(); err != nil {
+	var err error
+	if err = loadConfig(); err != nil {
 		log.Fatalf("couldn't load config: %s", err)
-	}
-	if err := loginReddit(); err != nil {
+	} else if err = loginReddit(); err != nil {
 		log.Fatalf("couldn't log into Reddit: %s", err)
-	}
-	if err := loginDiscord(); err != nil {
+	} else if err = loginDiscord(); err != nil {
 		log.Fatalf("couldn't log into Discord: %s", err)
-	}
-
-	if err := setInitialBefore(); err != nil {
+	} else if err = setInitialBefore(); err != nil {
 		log.Printf("couldn't set initial before value: %s", err)
 	}
 
