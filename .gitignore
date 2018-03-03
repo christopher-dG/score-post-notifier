@@ -1,3 +1,7 @@
-/config.json
-/notify
-/score-post-notifier
+__pycache__/
+venv/
+.env
+*.pyc
+*.json
+*.bak
+*.log
