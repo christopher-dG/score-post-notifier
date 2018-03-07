@@ -27,13 +27,14 @@ discord_reactions = ["\U0001F44D", "\U0001F44E"]
 class DiscordChannel(object):
     """Container for channel config and a discord.Channel object."""
     def __init__(self, *, channel, tag, player_blacklist, submitter_blacklist):
+        self.id = channel.id
         self.channel = channel
         self.tag = tag
         self.player_blacklist = [x.lower() for x in player_blacklist]
         self.submitter_blacklist = [x.lower() for x in submitter_blacklist]
 
     def __repr__(self):
-        return str(self.channel.id)
+        return "<channel %s>" % self.id
 
 
 def player_name(s):
@@ -70,7 +71,7 @@ def process_post(post):
         if not no_tag:
             msg = "%s: %s" % (channel.tag, msg)
 
-        logger.info("Sending to %s: %s" % (channel.channel.id, msg))
+        logger.info("Sending to %s: %s" % (channel.id, msg))
         if not test:
             msg = run(discord_client.send_message(channel.channel, msg))
             for reaction in discord_reactions:
@@ -98,6 +99,8 @@ logging.basicConfig(format="%(asctime)s: %(message)s", level=logging.INFO)
 
 if __name__ == "__main__":
     logging.info("test=%s, no_tag=%s" % (test, no_tag))
+    channels_str = "\n".join(str(c.__dict__) for c in channels)
+    logging.info("Channels:\n%s" % channels_str)
 
     while True:
         try:
