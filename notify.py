@@ -37,7 +37,7 @@ class DiscordChannel(object):
         return "<channel %s>" % self.id
 
 
-def player_name(s):
+def parse_player(s):
     """Parse a player name from a title."""
     s = s[:s.index("|")]
     for cap in parens_re.findall(s):
@@ -54,13 +54,13 @@ def process_post(post):
     if not score_post_re.match(post.title):
         logger.info("No match: %s" % post.title)
         return
-    if post.saved:
+    if not test and post.saved:
         logger.info("Already saved: %s" % post.title)
         return
 
-    player = player_name(post.title)
+    player = parse_player(post.title)
     for channel in channels:
-        if player_name in channel.player_blacklist:
+        if player in channel.player_blacklist:
             logger.info("%s is in %s's blacklist" % (player, channel))
             continue
         if post.author.name.lower() in channel.submitter_blacklist:
