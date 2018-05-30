@@ -1,12 +1,13 @@
 #!usr/bin/env python
 
-import discord
 import json
 import logging
 import os
-import praw
 import re
 import sys
+
+import discord
+import praw
 
 score_post_re = re.compile(".+\|.+-.+\[.+\]")
 parens_re = re.compile("\((.*?)\)")
@@ -35,6 +36,15 @@ class DiscordChannel(object):
 
     def __repr__(self):
         return "<channel %s>" % self.id
+
+
+def escape(s):
+    """Escape Discord formatting."""
+    return s\
+        .replace("_", "\_")\
+        .replace("~", "\~")\
+        .replace("*", "\*")\
+        .replace("`", "\`")
 
 
 def parse_player(s):
@@ -67,7 +77,8 @@ def process_post(post):
             logger.info("/u/%s is in %s's blacklist" % (post.author, channel))
             continue
 
-        msg = "{0.title}\n{0.shortlink} (post by `/u/{0.author}`)".format(post)
+        title = escape(post.title)
+        msg = "%s\n%s (post by `/u/%s`)" % (title, post.shortlink, post.author)
         if not no_tag:
             msg = "%s: %s" % (channel.tag, msg)
 
