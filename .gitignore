@@ -1,7 +1,6 @@
+*.env
+.serverless/
 __pycache__/
+channels.json
+node_modules/
 venv/
-.env
-*.pyc
-*.json
-*.bak
-*.log

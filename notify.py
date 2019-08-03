@@ -1,7 +1,6 @@
 #!usr/bin/env python
 
 import json
-import logging
 import os
 import re
 import sys
@@ -19,9 +18,8 @@ reddit = praw.Reddit(
     user_agent=os.environ["REDDIT_USERNAME"],
     password=os.environ["REDDIT_PASSWORD"],
 )
-subreddit = reddit.subreddit(os.environ.get("SPN_SUBREDDIT", "osugame"))
-
-discord_client = discord.Client()
+subreddit = reddit.subreddit("osugame")
+discord_client = None
 discord_reactions = ["\U0001F44D", "\U0001F44E"]
 
 
@@ -62,19 +60,19 @@ def run(x):
 
 def process_post(post):
     if not score_post_re.match(post.title):
-        logger.info("No match: %s" % post.title)
+        print("No match: %s" % post.title)
         return
     if not test and post.saved:
-        logger.info("Already saved: %s" % post.title)
+        print("Already saved: %s" % post.title)
         return
 
     player = parse_player(post.title)
     for channel in channels:
         if player in channel.player_blacklist:
-            logger.info("%s is in %s's blacklist" % (player, channel))
+            print("%s is in %s's blacklist" % (player, channel))
             continue
         if post.author.name.lower() in channel.submitter_blacklist:
-            logger.info("/u/%s is in %s's blacklist" % (post.author, channel))
+            print("/u/%s is in %s's blacklist" % (post.author, channel))
             continue
 
         title = escape(post.title)
@@ -82,7 +80,7 @@ def process_post(post):
         if not no_tag:
             msg = "%s: %s" % (channel.tag, msg)
 
-        logger.info("Sending to %s: %s" % (channel.id, msg))
+        print("Sending to %s: %s" % (channel.id, msg))
         if not test:
             msg = run(discord_client.send_message(channel.channel, msg))
             for reaction in discord_reactions:
@@ -92,7 +90,7 @@ def process_post(post):
         post.save()
 
 
-with open(os.environ.get("DISCORD_CHANNEL_CONF", "channels.json")) as f:
+with open("channels.json") as f:
     channels = [
         DiscordChannel(
             channel=discord.Object(id=channel["id"]),
@@ -102,25 +100,22 @@ with open(os.environ.get("DISCORD_CHANNEL_CONF", "channels.json")) as f:
         )
         for channel in json.load(f)
     ]
-run(discord_client.login(os.environ["DISCORD_TOKEN"]))
-test = "--test" in sys.argv
-no_tag = "--no-tag" in sys.argv
-logger = logging.getLogger()
-logging.basicConfig(format="%(asctime)s: %(message)s", level=logging.INFO)
+test = os.getenv("TEST", "").lower() == "true"
+no_tag = os.getenv("NO_TAG", "").lower() == "true"
 
-if __name__ == "__main__":
-    logging.info("test=%s, no_tag=%s" % (test, no_tag))
+def handler(_event, _context):
+    global discord_client
+    discord_client = discord.Client()
+    run(discord_client.login(os.environ["DISCORD_TOKEN"]))
+    print("test=%s, no_tag=%s" % (test, no_tag))
     channels_str = "\n".join(str(c.__dict__) for c in channels)
-    logging.info("Channels:\n%s" % channels_str)
+    print("Channels:\n%s" % channels_str)
 
-    while True:
-        try:
-            for post in subreddit.stream.submissions():
-                process_post(post)
-        except KeyboardInterrupt:
-            print("\nExiting")
-            break
-        except Exception as e:
-            print("Exception: %s" % e)
+    try:
+        for post in subreddit.new():
+            print("Processing post %s" % post.id)
+            process_post(post)
+    except Exception as e:
+        print("Exception: %s" % e)
 
     run(discord_client.close())

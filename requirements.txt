@@ -1,2 +1,2 @@
-discord
-praw
+discord.py==0.16.12
+praw==6.3.1

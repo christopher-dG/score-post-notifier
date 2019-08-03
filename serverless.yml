@@ -1,0 +1,26 @@
+service: score-post-notifier
+provider:
+  name: aws
+  runtime: python3.6
+  environment:
+    DISCORD_TOKEN: ${env:DISCORD_TOKEN}
+    NO_TAG: ${env:NO_TAG, "false"}
+    REDDIT_CLIENT_ID: ${env:REDDIT_CLIENT_ID}
+    REDDIT_CLIENT_SECRET: ${env:REDDIT_CLIENT_SECRET}
+    REDDIT_PASSWORD: ${env:REDDIT_PASSWORD}
+    REDDIT_USERNAME: ${env:REDDIT_USERNAME}
+    TEST: ${env:TEST, "false"}
+package:
+  exclude:
+    - ./**
+  include:
+    - ./notify.py
+    - ./channels.json
+plugins:
+  - serverless-python-requirements
+functions:
+  notify:
+    handler: notify.handler
+    timeout: 60
+    events:
+      - schedule: rate(3 minutes)
